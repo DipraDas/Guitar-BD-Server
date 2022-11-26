@@ -30,7 +30,10 @@ function verifyJWT(req, res, next) {
 
 async function run() {
     try {
+        const instrumentCategories = client.db('guitarBd').collection('instrumentCategories');
+        const instrument = client.db('guitarBd').collection('instrument');
         const usersCollection = client.db('guitarBd').collection('users');
+        const bookingsCollection = client.db('guitarBd').collection('bookings');
 
         // JWT
         app.get('/jwt', async (req, res) => {
@@ -50,6 +53,29 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
+
+        // Instrument Categories Load
+        app.get('/instrumentCategories', async (req, res) => {
+            const query = {};
+            const users = await instrumentCategories.find(query).toArray();
+            res.send(users);
+        })
+
+        // Instrument Load
+        app.get('/categories/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { typeId: id };
+            const guitars = await instrument.find(query).toArray();
+            res.send(guitars);
+        })
+
+        // Product Booking
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        });
+
     }
     finally {
 
