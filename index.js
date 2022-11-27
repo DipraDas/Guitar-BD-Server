@@ -31,7 +31,7 @@ function verifyJWT(req, res, next) {
 async function run() {
     try {
         const instrumentCategories = client.db('guitarBd').collection('instrumentCategories');
-        const instrument = client.db('guitarBd').collection('instrument');
+        const instruments = client.db('guitarBd').collection('instrument');
         const usersCollection = client.db('guitarBd').collection('users');
         const bookingsCollection = client.db('guitarBd').collection('bookings');
 
@@ -77,7 +77,7 @@ async function run() {
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '24h' });
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' });
                 return res.send({ accessToken: token });
             }
             res.status(403).send({ accessToken: '' })
@@ -97,11 +97,17 @@ async function run() {
             res.send(users);
         })
 
+        app.post('/instrument', verifyJWT, verifySeller, async (req, res) => {
+            const instrument = req.body;
+            const result = await instruments.insertOne(instrument);
+            res.send(result);
+        });
+
         // Instrument Load
         app.get('/categories/:id', async (req, res) => {
             const id = req.params.id;
             const query = { typeId: id };
-            const guitars = await instrument.find(query).toArray();
+            const guitars = await instruments.find(query).toArray();
             res.send(guitars);
         })
 
