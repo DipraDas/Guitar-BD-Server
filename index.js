@@ -139,6 +139,28 @@ async function run() {
             res.send(result);
         });
 
+        app.put('/product/:id', verifyJWT, verifySeller, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: true
+                }
+            }
+            const result = await instruments.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        app.get('/advertiseproducts', async (req, res) => {
+            // const id = req.params.id;
+            const query = { advertise: true };
+            const products = await instruments.find(query).toArray();
+            res.send(products);
+        });
+
+
+
     }
     finally {
 
