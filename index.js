@@ -159,7 +159,18 @@ async function run() {
             res.send(products);
         });
 
+        app.get('/users/buyers', verifyJWT, verifyAdmin, async (req, res) => {
+            const query = { role: 'buyer' };
+            const buyers = await usersCollection.find(query).toArray();
+            res.send(buyers);
+        });
 
+        app.delete('/users/buyers/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
+        });
 
     }
     finally {
