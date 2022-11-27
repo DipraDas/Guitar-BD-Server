@@ -104,6 +104,7 @@ async function run() {
             res.send(result);
         })
 
+
         // Instrument Categories Load
         app.get('/instrumentCategories', async (req, res) => {
             const query = {};
@@ -186,6 +187,22 @@ async function run() {
             res.send(result);
         });
 
+
+        app.post('/users/sellers', verifyJWT, verifyAdmin, async (req, res) => {
+            const seller = req.body;
+            const id = seller._id;
+            const filterId = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    verified : true
+                }
+            }
+            const email = seller.email;
+            const filterEmail = { email: email }
+            const result = await usersCollection.updateOne(filterId, updatedDoc);
+            const updatedProducts = await instruments.updateMany(filterEmail, updatedDoc)
+            res.send(result);
+        });
     }
     finally {
 
