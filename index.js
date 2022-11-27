@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -56,6 +56,20 @@ async function run() {
             }
             next();
         }
+
+        app.get('/myproducts', verifyJWT, verifySeller, async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                email: email
+            }
+            const products = await instruments.find(query).toArray();
+            res.send(products);
+        });
 
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
@@ -115,6 +129,13 @@ async function run() {
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        });
+
+        app.delete('/product/:id', verifyJWT, verifySeller, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await instruments.deleteOne(filter);
             res.send(result);
         });
 
