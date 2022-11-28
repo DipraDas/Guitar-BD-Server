@@ -194,7 +194,7 @@ async function run() {
             const filterId = { _id: ObjectId(id) }
             const updatedDoc = {
                 $set: {
-                    verified : true
+                    verified: true
                 }
             }
             const email = seller.email;
@@ -239,6 +239,92 @@ async function run() {
             const products = await wishlistCollection.find(query).toArray();
             res.send(products);
         });
+
+
+        app.put('/productReport/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    report: true
+                }
+            }
+            const result = await instruments.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        // app.get('/showReports', verifyJWT, verifyAdmin, async (req, res) => {
+        //     const query = { report: true };
+        //     const products = await instruments.find(query).toArray();
+        //     res.send(products);
+        // });
+
+
+        // create payment intent 
+        app.post("/create-payment-intent", async (req, res) => {
+            const order = req.body;
+            const price = order.price;
+            const amount = price * 100;
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
+        // update payment info 
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.orderId
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const UpdatedResult = await bookingsCollection.updateOne(filter, updatedDoc);
+            res.send(result)
+        })
+
+        // report product 
+        app.put('/productReport/:id', verifyJWT,  async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    report: true
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        // show reported items 
+        app.get('/showReports', verifyJWT, verifyAdmin, async (req, res) => {
+            const query = { report: true };
+            const products = await instruments.find(query).toArray();
+            res.send(products);
+        });
+
+        // delete reported items
+        app.delete('/reportedproduct/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await instruments.deleteOne(filter);
+            res.send(result);
+        });
+
     }
     finally {
 
