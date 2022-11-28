@@ -34,6 +34,7 @@ async function run() {
         const instruments = client.db('guitarBd').collection('instrument');
         const usersCollection = client.db('guitarBd').collection('users');
         const bookingsCollection = client.db('guitarBd').collection('bookings');
+        const wishlistCollection = client.db('guitarBd').collection('wishlist');
 
         const verifyAdmin = async (req, res, next) => {
             const decodedEmail = req.decoded.email;
@@ -154,7 +155,6 @@ async function run() {
         });
 
         app.get('/advertiseproducts', async (req, res) => {
-            // const id = req.params.id;
             const query = { advertise: true };
             const products = await instruments.find(query).toArray();
             res.send(products);
@@ -202,6 +202,42 @@ async function run() {
             const result = await usersCollection.updateOne(filterId, updatedDoc);
             const updatedProducts = await instruments.updateMany(filterEmail, updatedDoc)
             res.send(result);
+        });
+
+        app.get('/myorders', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                email: email
+            }
+            const orders = await bookingsCollection.find(query).toArray();
+            res.send(orders);
+        });
+
+        app.post('/wishlist', async (req, res) => {
+            const wishlist = req.body;
+            const result = await wishlistCollection.insertOne(wishlist);
+            res.send(result);
+        });
+
+        app.get('/mywishlist', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = {
+                email: email
+            }
+            const products = await wishlistCollection.find(query).toArray();
+            res.send(products);
         });
     }
     finally {
